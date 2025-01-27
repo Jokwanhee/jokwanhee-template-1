@@ -1,6 +1,7 @@
+import org.gradle.internal.os.OperatingSystem
 import org.jetbrains.changelog.Changelog
 import org.jetbrains.changelog.markdownToHTML
-import org.jetbrains.intellij.platform.gradle.TestFrameworkType
+import kotlin.io.path.name
 
 plugins {
     id("java") // Java support
@@ -34,20 +35,61 @@ dependencies {
     testImplementation(libs.junit)
 
     // IntelliJ Platform Gradle Plugin Dependencies Extension - read more: https://plugins.jetbrains.com/docs/intellij/tools-intellij-platform-gradle-plugin-dependencies-extension.html
+    /**
+     * default
+     */
+//    intellijPlatform {
+//        create(providers.gradleProperty("platformType"), providers.gradleProperty("platformVersion"))
+//
+//        // Plugin Dependencies. Uses `platformBundledPlugins` property from the gradle.properties file for bundled IntelliJ Platform plugins.
+//        bundledPlugins(providers.gradleProperty("platformBundledPlugins").map { it.split(',') })
+//
+//        // Plugin Dependencies. Uses `platformPlugins` property from the gradle.properties file for plugin from JetBrains Marketplace.
+//        plugins(providers.gradleProperty("platformPlugins").map { it.split(',') })
+//
+//        instrumentationTools()
+//        pluginVerifier()
+//        zipSigner()
+//        testFramework(TestFrameworkType.Platform)
+//    }
+
     intellijPlatform {
-        create(providers.gradleProperty("platformType"), providers.gradleProperty("platformVersion"))
+        /**
+         * << 플러그인 기본 설정 (gradle.properties 참조) >>
+         * [name] : 플러그인 이름 설정
+         * [group] : 템플릿 사용 후, 설정된 패키지 네임으로 설정
+         * [version] : 플러그인 버저닝(Semver 형식)
+         */
+        create(
+            name = providers.gradleProperty("pluginName").get(),
+            group = providers.gradleProperty("pluginGroup").get(),
+            version = providers.gradleProperty("pluginVersion").get(),
+        )
 
-        // Plugin Dependencies. Uses `platformBundledPlugins` property from the gradle.properties file for bundled IntelliJ Platform plugins.
-        bundledPlugins(providers.gradleProperty("platformBundledPlugins").map { it.split(',') })
+        /**
+         * << OS 에 따른 IDE 설치 경로 설정 (gradle.properties 참조) >>
+         * [localPath] : Android Studio 설치 경로 (OS에 따른 분기)
+         */
+        if (OperatingSystem.current().isMacOsX) {
+            local(localPath = providers.gradleProperty("androidStudioPathMacOS").get())
+        } else { // isWindows
+            local(localPath = providers.gradleProperty("androidStudioPathWindows").get())
+        }
 
-        // Plugin Dependencies. Uses `platformPlugins` property from the gradle.properties file for plugin from JetBrains Marketplace.
-        plugins(providers.gradleProperty("platformPlugins").map { it.split(',') })
+        /**
+         * << 플러그인 추가 >>
+         * gradle.properties 파일에 platformPlugins로 설정된 문자열을 , 구분자를 사용해서 리스트 형태를 여러 플러그인 설정
+         */
+        plugins(
+            providers.gradleProperty("platformPlugins")
+                .map { it.split(',').map(String::trim).filter(String::isNotEmpty) })
 
-        instrumentationTools()
-        pluginVerifier()
-        zipSigner()
-        testFramework(TestFrameworkType.Platform)
+//        instrumentationTools()
+//        pluginVerifier()
+//        zipSigner()
+//        testFramework(TestFrameworkType.Platform)
     }
+
 }
 
 // Configure IntelliJ Platform Gradle Plugin - read more: https://plugins.jetbrains.com/docs/intellij/tools-intellij-platform-gradle-plugin-extension.html
@@ -98,7 +140,8 @@ intellijPlatform {
         // The pluginVersion is based on the SemVer (https://semver.org) and supports pre-release labels, like 2.1.7-alpha.3
         // Specify pre-release label to publish the plugin in a custom Release Channel automatically. Read more:
         // https://plugins.jetbrains.com/docs/intellij/deployment.html#specifying-a-release-channel
-        channels = providers.gradleProperty("pluginVersion").map { listOf(it.substringAfter('-', "").substringBefore('.').ifEmpty { "default" }) }
+        channels = providers.gradleProperty("pluginVersion")
+            .map { listOf(it.substringAfter('-', "").substringBefore('.').ifEmpty { "default" }) }
     }
 
     pluginVerification {
