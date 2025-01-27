@@ -2,8 +2,6 @@
 # libraries
 junit = "4.13.2"
 
-agp = "8.7.1"
-
 # plugins
 changelog = "2.2.1"
 intelliJPlatform = "2.1.0"

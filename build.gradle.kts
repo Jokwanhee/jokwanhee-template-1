@@ -73,7 +73,7 @@ dependencies {
         if (OperatingSystem.current().isMacOsX) {
             local(localPath = providers.gradleProperty("androidStudioPathMacOS").get())
         } else { // isWindows
-            local(localPath = providers.gradleProperty("androidStudioPathWindows").get())
+//            local(localPath = providers.gradleProperty("androidStudioPathWindows").get())
         }
 
         /**
