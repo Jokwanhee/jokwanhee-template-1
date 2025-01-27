@@ -6,28 +6,18 @@
 
     <depends>com.intellij.modules.platform</depends>
 
-    <!-- 추가해주어야 하는 Dependencies 부분  -->
+    <!-- 추가해주어야 하는 Dependencies 부분
+        - kotlin
+        - android
+        - platform
+    -->
     <depends>org.jetbrains.kotlin</depends>
-<!--    <depends>com.intellij.modules.java</depends>-->
-    <depends>com.intellij.modules.androidstudio</depends>
+    <depends>org.jetbrains.android</depends>
+    <depends>com.intellij.modules.platform</depends>
 
-
-    <resource-bundle>messages.MyBundle</resource-bundle>
-
-    <extensions defaultExtensionNs="org.jetbrains.kotlin">
+    <extensions defaultExtensionNs="com.android">
+        <tools.idea.wizard.template.wizardTemplateProvider
+            implementation="com.github.jokwanhee.jokwanheetemplate1.GenerateActivityTemplateProvider" />
     </extensions>
 
-<!--    <extensions defaultExtensionNs="com.android.tools.idea.wizard.template">-->
-<!--        <wizardTemplateProvider-->
-<!--            implementation="com.github.jokwanhee.jokwanheetemplate1.GenerateActivityTemplateProvider" />-->
-<!--    </extensions>-->
-
-
-<!--    <extensions defaultExtensionNs="com.intellij">-->
-<!--        <toolWindow factoryClass="com.github.jokwanhee.jokwanheetemplate1.toolWindow.MyToolWindowFactory" id="MyToolWindow"/>-->
-<!--    </extensions>-->
-
-<!--    <applicationListeners>-->
-<!--        <listener class="com.github.jokwanhee.jokwanheetemplate1.listeners.MyApplicationActivationListener" topic="com.intellij.openapi.application.ApplicationActivationListener"/>-->
-<!--    </applicationListeners>-->
 </idea-plugin>

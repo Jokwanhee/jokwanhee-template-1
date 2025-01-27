@@ -1,6 +1,7 @@
 import org.gradle.internal.os.OperatingSystem
 import org.jetbrains.changelog.Changelog
 import org.jetbrains.changelog.markdownToHTML
+import org.jetbrains.intellij.platform.gradle.Constants
 import kotlin.io.path.name
 
 plugins {
@@ -35,24 +36,6 @@ dependencies {
     testImplementation(libs.junit)
 
     // IntelliJ Platform Gradle Plugin Dependencies Extension - read more: https://plugins.jetbrains.com/docs/intellij/tools-intellij-platform-gradle-plugin-dependencies-extension.html
-    /**
-     * default
-     */
-//    intellijPlatform {
-//        create(providers.gradleProperty("platformType"), providers.gradleProperty("platformVersion"))
-//
-//        // Plugin Dependencies. Uses `platformBundledPlugins` property from the gradle.properties file for bundled IntelliJ Platform plugins.
-//        bundledPlugins(providers.gradleProperty("platformBundledPlugins").map { it.split(',') })
-//
-//        // Plugin Dependencies. Uses `platformPlugins` property from the gradle.properties file for plugin from JetBrains Marketplace.
-//        plugins(providers.gradleProperty("platformPlugins").map { it.split(',') })
-//
-//        instrumentationTools()
-//        pluginVerifier()
-//        zipSigner()
-//        testFramework(TestFrameworkType.Platform)
-//    }
-
     intellijPlatform {
         /**
          * << 플러그인 기본 설정 (gradle.properties 참조) >>
@@ -69,25 +52,44 @@ dependencies {
         /**
          * << OS 에 따른 IDE 설치 경로 설정 (gradle.properties 참조) >>
          * [localPath] : Android Studio 설치 경로 (OS에 따른 분기)
+         *
+         * Android Studio Version Format Check : https://developer.android.com/studio/archive
          */
-        if (OperatingSystem.current().isMacOsX) {
-            local(localPath = providers.gradleProperty("androidStudioPathMacOS").get())
-        } else { // isWindows
-//            local(localPath = providers.gradleProperty("androidStudioPathWindows").get())
+        if (project.hasProperty("StudioCompilePath")) {
+            // Android Studio Compile Path 설정한 경우
+            // Compile Path : AI-242.23339.11.2421.12483815 <- 이런거 있음.
+            local(property("StudioCompilePath").toString())
+        } else {
+            // Android Studio Version 등록 시
+            // Version format : 2024.2.1.10
+            androidStudio(property("platformVersion").toString())
         }
+//        if (OperatingSystem.current().isMacOsX) {
+//            local(localPath = providers.gradleProperty("androidStudioPathMacOS").get())
+//        } else { // isWindows
+//            local(localPath = providers.gradleProperty("androidStudioPathWindows").get())
+//        }
+
 
         /**
-         * << 플러그인 추가 >>
-         * gradle.properties 파일에 platformPlugins로 설정된 문자열을 , 구분자를 사용해서 리스트 형태를 여러 플러그인 설정
+         * << IntelliJ Platform plugins 추가 >>
+         * (android)
          */
-        plugins(
-            providers.gradleProperty("platformPlugins")
+        // Plugin Dependencies. Uses `platformBundledPlugins` property from the gradle.properties file for bundled IntelliJ Platform plugins.
+        bundledPlugins(
+            providers.gradleProperty("platformBundledPlugins")
                 .map { it.split(',').map(String::trim).filter(String::isNotEmpty) })
 
-//        instrumentationTools()
-//        pluginVerifier()
-//        zipSigner()
-//        testFramework(TestFrameworkType.Platform)
+        instrumentationTools()
+        /**
+         * << JetBrains Marketplace plugins 추가 >>
+         * gradle.properties 파일에 platformPlugins로 설정된 문자열을 , 구분자를 사용해서 리스트 형태를 여러 플러그인 설정
+         * (kotlin, java)
+         */
+        // Plugin Dependencies. Uses `platformPlugins` property from the gradle.properties file for plugin from JetBrains Marketplace.
+//        plugins(
+//            providers.gradleProperty("platformPlugins")
+//                .map { it.split(',').map(String::trim).filter(String::isNotEmpty) })
     }
 
 }
@@ -196,5 +198,12 @@ intellijPlatformTesting {
                 robotServerPlugin()
             }
         }
+    }
+}
+
+// https://github.com/JetBrains/intellij-platform-gradle-plugin/issues/1738
+configurations {
+    named(Constants.Configurations.INTELLIJ_PLATFORM_BUNDLED_MODULES) {
+        exclude(Constants.Configurations.Dependencies.BUNDLED_MODULE_GROUP, "com.jetbrains.performancePlugin")
     }
 }
